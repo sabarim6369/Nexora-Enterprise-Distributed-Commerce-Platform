@@ -32,6 +32,9 @@ CREATE TABLE "cart_items" (
 CREATE UNIQUE INDEX "carts_userId_key" ON "carts"("userId");
 
 -- CreateIndex
+CREATE INDEX "carts_userId_idx" ON "carts"("userId");
+
+-- CreateIndex
 CREATE INDEX "cart_items_cartId_idx" ON "cart_items"("cartId");
 
 -- CreateIndex
