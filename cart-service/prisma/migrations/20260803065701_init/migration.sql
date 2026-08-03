@@ -1,14 +1,5 @@
-/*
-  Warnings:
-
-  - You are about to drop the `User` table. If the table is not empty, all the data it contains will be lost.
-
-*/
 -- CreateEnum
 CREATE TYPE "CartStatus" AS ENUM ('ACTIVE', 'CHECKED_OUT', 'ABANDONED');
-
--- DropTable
-DROP TABLE "User";
 
 -- CreateTable
 CREATE TABLE "carts" (
