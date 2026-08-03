@@ -1,3 +1,4 @@
+
 import { IsString, IsNumber, IsOptional, IsEnum, Min } from 'class-validator';
 import { ProductStatus } from '@prisma/client';
 
