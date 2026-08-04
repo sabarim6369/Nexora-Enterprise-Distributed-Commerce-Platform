@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { BaseHttpClient } from './services/base-http-client.service';
 import { UserContextService } from './services/user-context.service';
 import { AuthGuard } from './guards/auth.guard';
+import { AppLogger } from './services/logger.service';
 import { AuthenticationModule } from '../authentication/authentication.module';
 
 @Module({
@@ -19,7 +20,7 @@ import { AuthenticationModule } from '../authentication/authentication.module';
     ConfigModule,
     forwardRef(() => AuthenticationModule),
   ],
-  providers: [BaseHttpClient, UserContextService, AuthGuard],
-  exports: [BaseHttpClient, UserContextService, AuthGuard, HttpModule],
+  providers: [BaseHttpClient, UserContextService, AuthGuard, AppLogger],
+  exports: [BaseHttpClient, UserContextService, AuthGuard, AppLogger, HttpModule],
 })
 export class CommonModule {}
