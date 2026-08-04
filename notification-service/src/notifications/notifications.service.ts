@@ -42,7 +42,7 @@ export class NotificationsService {
     return { data, total };
   }
 
-  async findOne(id: string): Promise<Notification> {
+  async findOne(id: string): Promise<Notification | null> {
     return this.notificationModel.findById(id).exec();
   }
 
@@ -54,11 +54,11 @@ export class NotificationsService {
     return this.notificationModel.find({ userId }).sort({ createdAt: -1 }).exec();
   }
 
-  async update(id: string, updateData: Partial<Notification>): Promise<Notification> {
+  async update(id: string, updateData: Partial<Notification>): Promise<Notification | null> {
     return this.notificationModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
   }
 
-  async updateStatus(id: string, status: NotificationStatus, errorMessage?: string): Promise<Notification> {
+  async updateStatus(id: string, status: NotificationStatus, errorMessage?: string): Promise<Notification | null> {
     const updateData: any = { status };
     if (errorMessage) updateData.errorMessage = errorMessage;
     if (status === NotificationStatus.SENT) updateData.sentAt = new Date();
@@ -66,7 +66,7 @@ export class NotificationsService {
     return this.update(id, updateData);
   }
 
-  async retryFailedNotification(id: string): Promise<Notification> {
+  async retryFailedNotification(id: string): Promise<Notification | null> {
     const notification = await this.findOne(id);
     
     if (!notification) {
@@ -83,14 +83,17 @@ export class NotificationsService {
       errorMessage: undefined,
     });
 
-    if (updated.type === NotificationType.EMAIL) {
-      this.processEmailNotification(updated);
+    if (updated && updated.type === NotificationType.EMAIL) {
+      const updatedDoc = await this.notificationModel.findById(id).exec();
+      if (updatedDoc) {
+        this.processEmailNotification(updatedDoc);
+      }
     }
 
     return updated;
   }
 
-  async delete(id: string): Promise<Notification> {
+  async delete(id: string): Promise<Notification | null> {
     return this.notificationModel.findByIdAndDelete(id).exec();
   }
 
@@ -133,20 +136,20 @@ export class NotificationsService {
       });
 
       if (result.success) {
-        await this.updateStatus(notification.id, NotificationStatus.SENT);
-        this.logger.log(`Email notification ${notification.id} sent successfully`);
+        await this.updateStatus(notification._id.toString(), NotificationStatus.SENT);
+        this.logger.log(`Email notification ${notification._id.toString()} sent successfully`);
       } else {
-        await this.updateStatus(notification.id, NotificationStatus.FAILED, result.error);
-        this.logger.error(`Email notification ${notification.id} failed: ${result.error}`);
+        await this.updateStatus(notification._id.toString(), NotificationStatus.FAILED, result.error);
+        this.logger.error(`Email notification ${notification._id.toString()} failed: ${result.error}`);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      await this.updateStatus(notification.id, NotificationStatus.FAILED, errorMessage);
-      this.logger.error(`Error processing email notification ${notification.id}: ${errorMessage}`);
+      await this.updateStatus(notification._id.toString(), NotificationStatus.FAILED, errorMessage);
+      this.logger.error(`Error processing email notification ${notification._id.toString()}: ${errorMessage}`);
     }
   }
 
-  async sendOrderConfirmation(orderData: any): Promise<Notification> {
+  async sendOrderConfirmation(orderData: any): Promise<NotificationDocument> {
     const notification = await this.create({
       type: NotificationType.EMAIL,
       recipient: orderData.customerEmail,
@@ -159,12 +162,12 @@ export class NotificationsService {
     });
 
     await this.emailService.sendOrderConfirmationEmail(orderData.customerEmail, orderData);
-    await this.updateStatus(notification.id, NotificationStatus.SENT);
+    await this.updateStatus((notification as any)._id.toString(), NotificationStatus.SENT);
 
-    return notification;
+    return notification as NotificationDocument;
   }
 
-  async sendShippingNotification(orderData: any): Promise<Notification> {
+  async sendShippingNotification(orderData: any): Promise<NotificationDocument> {
     const notification = await this.create({
       type: NotificationType.EMAIL,
       recipient: orderData.customerEmail,
@@ -177,12 +180,12 @@ export class NotificationsService {
     });
 
     await this.emailService.sendShippingNotificationEmail(orderData.customerEmail, orderData);
-    await this.updateStatus(notification.id, NotificationStatus.SENT);
+    await this.updateStatus((notification as any)._id.toString(), NotificationStatus.SENT);
 
-    return notification;
+    return notification as NotificationDocument;
   }
 
-  async sendPasswordReset(email: string, resetToken: string): Promise<Notification> {
+  async sendPasswordReset(email: string, resetToken: string): Promise<NotificationDocument> {
     const notification = await this.create({
       type: NotificationType.EMAIL,
       recipient: email,
@@ -193,12 +196,12 @@ export class NotificationsService {
     });
 
     await this.emailService.sendPasswordResetEmail(email, resetToken);
-    await this.updateStatus(notification.id, NotificationStatus.SENT);
+    await this.updateStatus((notification as any)._id.toString(), NotificationStatus.SENT);
 
-    return notification;
+    return notification as NotificationDocument;
   }
 
-  async sendWelcomeEmail(email: string, userName: string, userId?: string): Promise<Notification> {
+  async sendWelcomeEmail(email: string, userName: string, userId?: string): Promise<NotificationDocument> {
     const notification = await this.create({
       type: NotificationType.EMAIL,
       recipient: email,
@@ -210,8 +213,8 @@ export class NotificationsService {
     });
 
     await this.emailService.sendWelcomeEmail(email, userName);
-    await this.updateStatus(notification.id, NotificationStatus.SENT);
+    await this.updateStatus((notification as any)._id.toString(), NotificationStatus.SENT);
 
-    return notification;
+    return notification as NotificationDocument;
   }
 }
