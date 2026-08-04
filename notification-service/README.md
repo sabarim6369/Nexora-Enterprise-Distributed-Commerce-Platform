@@ -1,98 +1,465 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Notification Service
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A comprehensive notification service built with NestJS, MongoDB/Mongoose, and Nodemailer for the Nexora e-commerce platform. This service handles email notifications, order confirmations, shipping updates, and user communications.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🚀 Features
 
-## Description
+- **Email Notifications**: SMTP-based email sending with Nodemailer
+- **Notification Management**: Track and manage all notifications with MongoDB
+- **Multiple Notification Types**: EMAIL, SMS, PUSH, IN_APP support
+- **Priority System**: LOW, MEDIUM, HIGH, URGENT priority levels
+- **Status Tracking**: PENDING, SENT, FAILED, RETRYING status management
+- **Retry Mechanism**: Automatic retry for failed notifications
+- **Template Support**: Pre-built templates for common notifications
+- **Statistics**: Real-time notification statistics and analytics
+- **MongoDB Integration**: Persistent storage with Mongoose ODM
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 📋 Prerequisites
 
-## Project setup
+- Node.js (v18 or higher)
+- MongoDB (v4.4 or higher)
+- npm or yarn
+- SMTP email server (Gmail, SendGrid, etc.)
 
+## 🔧 Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/sabarim6369/Nexora-Enterprise-Distributed-Commerce-Platform.git
+   cd Nexora/notification-service
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env
+   ```
+   Update `.env` with your configuration:
+   ```env
+   MONGODB_URI=mongodb://localhost:27017/notification_db
+   EMAIL_HOST=smtp.gmail.com
+   EMAIL_PORT=587
+   EMAIL_SECURE=false
+   EMAIL_USER=your-email@gmail.com
+   EMAIL_PASSWORD=your-app-password
+   EMAIL_FROM=noreply@nexora.com
+   FRONTEND_URL=http://localhost:3000
+   PORT=3006
+   NODE_ENV=development
+   ```
+
+## 🏃 Running the Application
+
+### Development Mode
 ```bash
-$ npm install
+npm run start:dev
 ```
 
-## Compile and run the project
-
+### Production Mode
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm run build
+npm run start:prod
 ```
 
-## Run tests
+The service will start on `http://localhost:3006` by default.
 
-```bash
-# unit tests
-$ npm run test
+## 📚 API Documentation
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+## Base URL
+```
+http://localhost:3006
 ```
 
-## Deployment
+---
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## Notification Management APIs
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+### 1. Create Notification
+```
+Method: POST
+URL: http://localhost:3006/notifications
+Headers: 
+  Content-Type: application/json
+Body (raw JSON):
+{
+  "type": "EMAIL",
+  "recipient": "user@example.com",
+  "subject": "Order Confirmation",
+  "content": "<h1>Your order has been confirmed</h1>",
+  "priority": "HIGH",
+  "userId": "user-uuid",
+  "orderId": "order-uuid",
+  "category": "ORDER"
+}
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 2. Get All Notifications
+```
+Method: GET
+URL: http://localhost:3006/notifications
+Query Parameters (optional):
+  - type: EMAIL (filter by type)
+  - status: SENT (filter by status)
+  - userId: user-uuid (filter by user)
+  - orderId: order-uuid (filter by order)
+  - recipient: email (filter by recipient)
+  - category: ORDER (filter by category)
+Headers: None
+Body: None
+```
 
-## Resources
+### 3. Get Notification Statistics
+```
+Method: GET
+URL: http://localhost:3006/notifications/statistics
+Headers: None
+Body: None
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+### 4. Get Notification by ID
+```
+Method: GET
+URL: http://localhost:3006/notifications/notification-uuid-here
+Headers: None
+Body: None
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### 5. Get Notifications by Recipient
+```
+Method: GET
+URL: http://localhost:3006/notifications/recipient/user@example.com
+Headers: None
+Body: None
+```
 
-## Support
+### 6. Get Notifications by User ID
+```
+Method: GET
+URL: http://localhost:3006/notifications/user/user-uuid-here
+Headers: None
+Body: None
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### 7. Update Notification
+```
+Method: PATCH
+URL: http://localhost:3006/notifications/notification-uuid-here
+Headers: 
+  Content-Type: application/json
+Body (raw JSON):
+{
+  "status": "SENT",
+  "priority": "HIGH"
+}
+```
 
-## Stay in touch
+### 8. Retry Failed Notification
+```
+Method: PATCH
+URL: http://localhost:3006/notifications/notification-uuid-here/retry
+Headers: None
+Body: None
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### 9. Delete Notification
+```
+Method: DELETE
+URL: http://localhost:3006/notifications/notification-uuid-here
+Headers: None
+Body: None
+```
 
-## License
+---
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## Email APIs
+
+### 10. Send Custom Email
+```
+Method: POST
+URL: http://localhost:3006/notifications/email/send
+Headers: 
+  Content-Type: application/json
+Body (raw JSON):
+{
+  "to": "user@example.com",
+  "subject": "Custom Email",
+  "html": "<h1>Hello World</h1>",
+  "text": "Hello World",
+  "cc": ["cc@example.com"],
+  "bcc": ["bcc@example.com"]
+}
+```
+
+### 11. Send Order Confirmation Email
+```
+Method: POST
+URL: http://localhost:3006/notifications/email/order-confirmation
+Headers: 
+  Content-Type: application/json
+Body (raw JSON):
+{
+  "orderNumber": "ORD-1722768000000-1234",
+  "customerEmail": "user@example.com",
+  "userId": "user-uuid",
+  "orderId": "order-uuid",
+  "totalAmount": 299.99
+}
+```
+
+### 12. Send Shipping Notification Email
+```
+Method: POST
+URL: http://localhost:3006/notifications/email/shipping-notification
+Headers: 
+  Content-Type: application/json
+Body (raw JSON):
+{
+  "orderNumber": "ORD-1722768000000-1234",
+  "customerEmail": "user@example.com",
+  "userId": "user-uuid",
+  "orderId": "order-uuid",
+  "trackingNumber": "TRACK123456",
+  "estimatedDelivery": "2026-08-10"
+}
+```
+
+### 13. Send Password Reset Email
+```
+Method: POST
+URL: http://localhost:3006/notifications/email/password-reset
+Headers: 
+  Content-Type: application/json
+Body (raw JSON):
+{
+  "email": "user@example.com",
+  "resetToken": "reset-token-here"
+}
+```
+
+### 14. Send Welcome Email
+```
+Method: POST
+URL: http://localhost:3006/notifications/email/welcome
+Headers: 
+  Content-Type: application/json
+Body (raw JSON):
+{
+  "email": "user@example.com",
+  "userName": "John Doe",
+  "userId": "user-uuid"
+}
+```
+
+### 15. Verify Email Connection
+```
+Method: GET
+URL: http://localhost:3006/notifications/email/verify
+Headers: None
+Body: None
+```
+
+---
+
+## Notification Types
+
+- **EMAIL**: Email notifications via SMTP
+- **SMS**: SMS notifications (future implementation)
+- **PUSH**: Push notifications (future implementation)
+- **IN_APP**: In-app notifications (future implementation)
+
+## Notification Status
+
+- **PENDING**: Notification queued for sending
+- **SENT**: Successfully sent
+- **FAILED**: Failed to send (can be retried)
+- **RETRYING**: Currently retrying after failure
+
+## Notification Priority
+
+- **LOW**: Low priority notifications
+- **MEDIUM**: Default priority
+- **HIGH**: High priority notifications
+- **URGENT**: Critical notifications
+
+---
+
+## Important Notes
+
+- **Email Configuration**: Requires valid SMTP credentials
+- **MongoDB**: Must be running before starting the service
+- **Retry Logic**: Failed notifications can be retried via API
+- **Templates**: Pre-built templates for common use cases
+- **Extensible**: Easy to add new notification types
+- Service runs on **port 3006**
+
+---
+
+## Response Examples
+
+### Create Notification Response
+```json
+{
+  "_id": "550e8400-e29b-41d4-a716-446655440000",
+  "type": "EMAIL",
+  "status": "PENDING",
+  "priority": "HIGH",
+  "recipient": "user@example.com",
+  "subject": "Order Confirmation",
+  "content": "<h1>Your order has been confirmed</h1>",
+  "userId": "user-uuid",
+  "orderId": "order-uuid",
+  "category": "ORDER",
+  "retryCount": 0,
+  "createdAt": "2026-08-04T12:00:00.000Z",
+  "updatedAt": "2026-08-04T12:00:00.000Z"
+}
+```
+
+### Statistics Response
+```json
+{
+  "total": 150,
+  "pending": 25,
+  "sent": 120,
+  "failed": 5,
+  "byType": {
+    "EMAIL": 150,
+    "SMS": 0,
+    "PUSH": 0
+  }
+}
+```
+
+### Send Email Response
+```json
+{
+  "success": true,
+  "messageId": "<message-id@smtp.gmail.com>"
+}
+```
+
+---
+
+## Testing Flow
+
+### Recommended Testing Order:
+1. **Verify email connection** (API #15)
+2. **Send welcome email** (API #14)
+3. **Send custom email** (API #10)
+4. **Create notification** (API #1)
+5. **Get all notifications** (API #2)
+6. **Get notification by ID** (API #4)
+7. **Get notifications by user** (API #6)
+8. **Send order confirmation** (API #11)
+9. **Send shipping notification** (API #12)
+10. **Get statistics** (API #3)
+11. **Retry failed notification** (API #8)
+12. **Delete notification** (API #9)
+
+---
+
+## 🗄️ Database Schema
+
+### Notification Model
+- `_id`: MongoDB ObjectId
+- `type`: EMAIL, SMS, PUSH, IN_APP
+- `status`: PENDING, SENT, FAILED, RETRYING
+- `priority`: LOW, MEDIUM, HIGH, URGENT
+- `recipient`: Email address or phone number
+- `subject`: Notification subject
+- `content`: HTML/text content
+- `templateId`: Template identifier
+- `metadata`: Additional data (object)
+- `retryCount`: Number of retry attempts
+- `errorMessage`: Error message if failed
+- `sentAt`: Timestamp when sent
+- `userId`: Associated user ID
+- `orderId`: Associated order ID
+- `category`: Notification category
+- `createdAt`, `updatedAt`: Timestamps
+
+---
+
+## 🔧 Configuration
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `MONGODB_URI` | MongoDB connection string | `mongodb://localhost:27017/notification_db` |
+| `EMAIL_HOST` | SMTP host | Required |
+| `EMAIL_PORT` | SMTP port | `587` |
+| `EMAIL_SECURE` | Use SSL/TLS | `false` |
+| `EMAIL_USER` | SMTP username | `your-email@gmail.com` |
+| `EMAIL_PASSWORD` | SMTP password | Required |
+| `EMAIL_FROM` | Default from address | `noreply@nexora.com` |
+| `FRONTEND_URL` | Frontend URL for links | `http://localhost:3000` |
+| `PORT` | Server port | `3006` |
+| `NODE_ENV` | Environment mode | `development` |
+
+---
+
+## 🧪 Testing
+
+### Run Unit Tests
+```bash
+npm run test
+```
+
+### Run E2E Tests
+```bash
+npm run test:e2e
+```
+
+### Run Test Coverage
+```bash
+npm run test:cov
+```
+
+---
+
+## 📦 Project Structure
+
+```
+notification-service/
+├── src/
+│   ├── notifications/
+│   │   ├── controllers/
+│   │   ├── services/
+│   │   ├── schemas/
+│   │   ├── dto/
+│   │   └── notifications.module.ts
+│   ├── email/
+│   │   ├── email.service.ts
+│   │   └── email.module.ts
+│   ├── app.module.ts
+│   └── main.ts
+├── .env
+├── .env.example
+├── package.json
+└── tsconfig.json
+```
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📝 License
+
+This project is licensed under the MIT License.
+
+---
+
+**Built with ❤️ for the Nexora E-Commerce Platform**
