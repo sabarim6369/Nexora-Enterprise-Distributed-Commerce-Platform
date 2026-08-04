@@ -1,7 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
 import { BaseHttpClient } from './services/base-http-client.service';
+import { UserContextService } from './services/user-context.service';
+import { AuthGuard } from './guards/auth.guard';
+import { AuthenticationModule } from '../authentication/authentication.module';
 
 @Module({
   imports: [
@@ -14,8 +17,9 @@ import { BaseHttpClient } from './services/base-http-client.service';
       }),
     }),
     ConfigModule,
+    forwardRef(() => AuthenticationModule),
   ],
-  providers: [BaseHttpClient],
-  exports: [BaseHttpClient, HttpModule],
+  providers: [BaseHttpClient, UserContextService, AuthGuard],
+  exports: [BaseHttpClient, UserContextService, AuthGuard, HttpModule],
 })
 export class CommonModule {}

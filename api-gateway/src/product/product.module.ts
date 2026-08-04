@@ -4,9 +4,10 @@ import { ProductController, CategoryController } from './controllers/product.con
 import { ProductService } from './services/product.service';
 import { ProductClientService } from './services/product-client.service';
 import { CommonModule } from '../common/common.module';
+import { AuthenticationModule } from '../authentication/authentication.module';
 
 @Module({
-  imports: [ConfigModule, CommonModule],
+  imports: [ConfigModule, CommonModule, AuthenticationModule],
   controllers: [ProductController, CategoryController],
   providers: [ProductService, ProductClientService],
   exports: [ProductService],
