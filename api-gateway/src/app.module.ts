@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CommonModule } from './common/common.module';
-import { AuthModule } from './auth/auth.module';
+import { AuthenticationModule } from './authentication/authentication.module';
 import { CartModule } from './cart/cart.module';
 import { ProductModule } from './product/product.module';
 import { OrderModule } from './order/order.module';
@@ -18,7 +18,7 @@ import { NotificationModule } from './notification/notification.module';
       envFilePath: '.env',
     }),
     CommonModule,
-    AuthModule,
+    AuthenticationModule,
     CartModule,
     ProductModule,
     OrderModule,
