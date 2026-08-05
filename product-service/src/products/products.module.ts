@@ -3,9 +3,10 @@ import { ProductsController } from './products.controller';
 import { ProductsService } from './products.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { AuthModule } from '../auth/auth.module';
+import { RedisCacheModule } from '../cache/cache.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule],
+  imports: [PrismaModule, AuthModule, RedisCacheModule],
   controllers: [ProductsController],
   providers: [ProductsService],
   exports: [ProductsService],
