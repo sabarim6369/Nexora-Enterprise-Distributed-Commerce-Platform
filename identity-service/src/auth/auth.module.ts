@@ -9,6 +9,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { PrismaModule } from '../prisma/prisma.module';
+import { RabbitMQModule } from '../rabbitmq/rabbitmq.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { PrismaModule } from '../prisma/prisma.module';
       },
     }),
     PrismaModule,
+    RabbitMQModule,
   ],
   controllers: [AuthController],
   providers: [
