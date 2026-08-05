@@ -4,10 +4,14 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { AddImageDto } from './dto/add-image.dto';
 import { ProductStatus } from '@prisma/client';
+import { CacheService } from '../cache/cache.service';
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cacheService: CacheService,
+  ) {}
 
   async create(createProductDto: CreateProductDto) {
     const { categoryId, slug, sku, ...productData } = createProductDto;
@@ -39,7 +43,7 @@ export class ProductsService {
       throw new BadRequestException('Product with this SKU already exists');
     }
 
-    return this.prisma.product.create({
+    const product = await this.prisma.product.create({
       data: {
         ...productData,
         categoryId,
@@ -53,6 +57,11 @@ export class ProductsService {
         },
       },
     });
+
+    // Invalidate products list cache
+    await this.cacheService.delPattern('products:list:*');
+
+    return product;
   }
 
   async findAll(filters?: {
@@ -63,6 +72,14 @@ export class ProductsService {
     limit?: number;
   }) {
     const { categoryId, status, search, page = 1, limit = 10 } = filters || {};
+
+    const cacheKey = this.cacheService.generateProductsListKey({ categoryId, status, search, page, limit });
+    
+    // Try to get from cache first
+    const cached = await this.cacheService.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
 
     const where: any = {};
 
@@ -98,7 +115,7 @@ export class ProductsService {
       this.prisma.product.count({ where }),
     ]);
 
-    return {
+    const result = {
       data: products,
       meta: {
         total,
@@ -107,9 +124,22 @@ export class ProductsService {
         totalPages: Math.ceil(total / limit),
       },
     };
+
+    // Cache the result for 30 minutes
+    await this.cacheService.set(cacheKey, result, 1800);
+
+    return result;
   }
 
   async findOne(id: string) {
+    const cacheKey = this.cacheService.generateProductKey(id);
+    
+    // Try to get from cache first
+    const cached = await this.cacheService.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     const product = await this.prisma.product.findUnique({
       where: { id },
       include: {
@@ -124,10 +154,21 @@ export class ProductsService {
       throw new NotFoundException('Product not found');
     }
 
+    // Cache the product for 1 hour
+    await this.cacheService.set(cacheKey, product, 3600);
+
     return product;
   }
 
   async findBySlug(slug: string) {
+    const cacheKey = `product:slug:${slug}`;
+    
+    // Try to get from cache first
+    const cached = await this.cacheService.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     const product = await this.prisma.product.findUnique({
       where: { slug },
       include: {
@@ -141,6 +182,9 @@ export class ProductsService {
     if (!product) {
       throw new NotFoundException('Product not found');
     }
+
+    // Cache the product for 1 hour
+    await this.cacheService.set(cacheKey, product, 3600);
 
     return product;
   }
@@ -186,7 +230,7 @@ export class ProductsService {
       }
     }
 
-    return this.prisma.product.update({
+    const updatedProduct = await this.prisma.product.update({
       where: { id },
       data: {
         ...productData,
@@ -201,6 +245,18 @@ export class ProductsService {
         },
       },
     });
+
+    // Invalidate cache for this product
+    await this.cacheService.del(this.cacheService.generateProductKey(id));
+    await this.cacheService.del(`product:slug:${product.slug}`);
+    if (slug && slug !== product.slug) {
+      await this.cacheService.del(`product:slug:${slug}`);
+    }
+    
+    // Invalidate products list cache
+    await this.cacheService.delPattern('products:list:*');
+
+    return updatedProduct;
   }
 
   async remove(id: string) {
@@ -215,6 +271,13 @@ export class ProductsService {
     await this.prisma.product.delete({
       where: { id },
     });
+
+    // Invalidate cache for this product
+    await this.cacheService.del(this.cacheService.generateProductKey(id));
+    await this.cacheService.del(`product:slug:${product.slug}`);
+    
+    // Invalidate products list cache
+    await this.cacheService.delPattern('products:list:*');
 
     return { message: 'Product deleted successfully' };
   }
@@ -238,7 +301,7 @@ export class ProductsService {
       });
     }
 
-    return this.prisma.productImage.create({
+    const image = await this.prisma.productImage.create({
       data: {
         productId,
         imageUrl,
@@ -246,6 +309,12 @@ export class ProductsService {
         displayOrder: displayOrder || 0,
       },
     });
+
+    // Invalidate cache for this product
+    await this.cacheService.del(this.cacheService.generateProductKey(productId));
+    await this.cacheService.del(`product:slug:${product.slug}`);
+
+    return image;
   }
 
   async removeImage(imageId: string) {
@@ -260,6 +329,9 @@ export class ProductsService {
     await this.prisma.productImage.delete({
       where: { id: imageId },
     });
+
+    // Invalidate cache for this product
+    await this.cacheService.del(this.cacheService.generateProductKey(image.productId));
 
     return { message: 'Image removed successfully' };
   }
@@ -285,6 +357,9 @@ export class ProductsService {
       data: { isPrimary: true },
     });
 
+    // Invalidate cache for this product
+    await this.cacheService.del(this.cacheService.generateProductKey(image.productId));
+
     return this.prisma.productImage.findUnique({
       where: { id: imageId },
     });
@@ -299,9 +374,14 @@ export class ProductsService {
       throw new NotFoundException('Image not found');
     }
 
-    return this.prisma.productImage.update({
+    const updatedImage = await this.prisma.productImage.update({
       where: { id: imageId },
       data: { displayOrder },
     });
+
+    // Invalidate cache for this product
+    await this.cacheService.del(this.cacheService.generateProductKey(image.productId));
+
+    return updatedImage;
   }
 }
